@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            width: 320px;
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0d;
+            color: white;
+            padding: 1rem;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            color: #3b82f6;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #1c1c24;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #27272a;
+            border-color: #52525b;
+        }
+
+        button.primary {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        button.primary:hover {
+            background: #2563eb;
+        }
+
+        .status {
+            font-size: 0.8rem;
+            color: #a1a1aa;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loader {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>ContinuumAI</h1>
+    <p style="font-size: 0.85rem; color: #a1a1aa; margin-bottom: 1.5rem;">Universal Context Portability</p>
+
+    <div id="main-view">
+        <button id="save-btn">Capture & Save Context</button>
+        <button id="load-btn" class="primary">Load & Continue</button>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
