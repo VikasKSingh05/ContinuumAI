@@ -2,10 +2,11 @@ import React from 'react';
 import { Bot, Layers, Zap, ArrowRight, Database } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Demo from './components/Demo';
+import Logo from './assets/logo.png';
 
 // Placeholder components
 const Hero = () => (
-  <section className="section" style={{ paddingTop: '8rem', paddingBottom: '6rem' }}>
+  <section className="section" id="hero" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: '0' }}>
     <div className="container" style={{ textAlign: 'center' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -50,10 +51,10 @@ const Hero = () => (
         </p>
 
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-          <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button className="btn-primary" onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             Try the Demo <ArrowRight size={18} />
           </button>
-          <button className="glass-panel" style={{
+          <button className="glass-panel" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })} style={{
             padding: '0.75rem 1.5rem',
             color: 'var(--text-primary)',
             cursor: 'pointer',
@@ -68,7 +69,7 @@ const Hero = () => (
 );
 
 const Problem = () => (
-  <section className="section" style={{ background: 'var(--bg-secondary)' }}>
+  <section className="section" id="problem" style={{ background: 'var(--bg-secondary)', minHeight: '80vh', display: 'flex', alignItems: 'center' }}>
     <div className="container">
       <h2 style={{ fontSize: '2.5rem', marginBottom: '3rem', textAlign: 'center' }}>The Broken Workflow</h2>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
@@ -83,7 +84,7 @@ const Problem = () => (
             <li>❌ Re-explaining constraints</li>
           </ul>
         </div>
-        <div className="glass-panel" style={{ padding: '2rem', borderColor: 'var(--accent-primary)' }}>
+        <div id="solution" className="glass-panel" style={{ padding: '2rem', borderColor: 'var(--accent-primary)' }}>
           <h3 style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
             <Bot size={24} /> With Continuum
           </h3>
@@ -100,6 +101,10 @@ const Problem = () => (
 );
 
 function App() {
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="app">
       <nav style={{
@@ -112,14 +117,16 @@ function App() {
         borderBottom: '1px solid rgba(255,255,255,0.05)'
       }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 'bold', fontSize: '1.25rem' }}>
-            <div style={{ width: 32, height: 32, background: 'var(--accent-primary)', borderRadius: 8 }}></div>
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 'bold', fontSize: '1.25rem', cursor: 'pointer' }}
+            onClick={() => scrollTo('hero')}
+          >
+            <img src={Logo} alt="ContinuumAI Logo" style={{ width: 52, height: 32, borderRadius: 8 }} />
             ContinuumAI
           </div>
           <div style={{ display: 'flex', gap: '2rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            <span>Problem</span>
-            <span>Solution</span>
-            <span>Demo</span>
+            <span onClick={() => scrollTo('solution')} className="nav-link" style={{ cursor: 'pointer' }}>Solution</span>
+            <span onClick={() => scrollTo('demo')} className="nav-link" style={{ cursor: 'pointer' }}>Demo</span>
           </div>
         </div>
       </nav>
@@ -127,7 +134,7 @@ function App() {
       <main>
         <Hero />
         <Problem />
-        <Demo />
+        <Demo id="demo" />
       </main>
 
       <footer style={{ padding: '2rem 0', borderTop: '1px solid var(--border-color)', marginTop: 'auto' }}>
