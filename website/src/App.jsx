@@ -3,7 +3,7 @@ import { Bot, Layers, Zap, ArrowRight, Database } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Demo from './components/Demo';
 import Background from './components/Background';
-import Logo from './assets/logo.png';
+import Logo from './assets/Logo.png';
 
 // Placeholder components
 const Hero = () => (
