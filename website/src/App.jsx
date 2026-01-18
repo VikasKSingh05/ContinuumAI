@@ -2,6 +2,7 @@ import React from 'react';
 import { Bot, Layers, Zap, ArrowRight, Database } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Demo from './components/Demo';
+import Background from './components/Background';
 import Logo from './assets/logo.png';
 
 // Placeholder components
@@ -107,6 +108,7 @@ function App() {
 
   return (
     <div className="app">
+      <Background />
       <nav style={{
         position: 'fixed',
         top: 0,
