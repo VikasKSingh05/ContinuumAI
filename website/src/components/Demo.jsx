@@ -1,34 +1,92 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, FileJson, MessageSquare, Loader2, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, FileJson, MessageSquare, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { extractContext, reconstructPrompt, formatChatTranscript } from '../services/api';
 
-const MOCK_CHAT = [
+// Default demo chat - users can modify this
+const DEFAULT_CHAT = [
     { role: 'user', content: "I need a date picker for my flight booking app. Must be accessible." },
     { role: 'assistant', content: "I can help with that. Do you want to use a library like generic-ui or build from scratch?" },
     { role: 'user', content: "Build from scratch using Tailwind. Make sure it supports range selection." }
 ];
 
-const MOCK_CONTEXT = {
-    goal: "Build a custom date picker for flight booking",
-    key_points: ["Accessible (WCAG)", "Range selection support", "Tailwind CSS"],
-    current_state: "Planning phase, user chose custom implementation",
-    next_task: "Provide React component code for range date picker",
-    response_style: "Technical, concise, code-heavy"
-};
-
-const MOCK_PROMPT = `
-Context Continuation:
-The user is building a custom date picker for a flight booking app.
-Constraints: Accessible, Range Selection, Tailwind CSS.
-Current State: Planning phase.
-Goal: Provide the React code.
-`;
-
 const Demo = () => {
     const [step, setStep] = useState(0); // 0: Chat, 1: Extracting, 2: JSON, 3: Transferring, 4: Target
+    const [chatMessages, setChatMessages] = useState(DEFAULT_CHAT);
+    const [extractedContext, setExtractedContext] = useState(null);
+    const [contextId, setContextId] = useState(null);
+    const [reconstructedPromptText, setReconstructedPromptText] = useState('');
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const nextStep = () => setStep(s => Math.min(s + 1, 4));
-    const reset = () => setStep(0);
+    const handleCaptureContext = async () => {
+        setError(null);
+        setIsLoading(true);
+        setStep(1); // Show extracting state
+
+        try {
+            // Format chat messages into transcript
+            const transcript = formatChatTranscript(chatMessages);
+            
+            // Call backend to extract context
+            const result = await extractContext(transcript);
+            
+            setExtractedContext(result.context);
+            setContextId(result.contextId);
+            setStep(2); // Show JSON context
+        } catch (err) {
+            console.error('Error extracting context:', err);
+            setError(err.message || 'Failed to extract context. Make sure the backend is running.');
+            setStep(0); // Reset to start
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleReconstructPrompt = async () => {
+        if (!extractedContext && !contextId) {
+            setError('No context available to reconstruct');
+            return;
+        }
+
+        setError(null);
+        setIsLoading(true);
+        setStep(3); // Show reconstructing state
+
+        try {
+            // Call backend to reconstruct prompt
+            const result = await reconstructPrompt(contextId, extractedContext);
+            
+            setReconstructedPromptText(result.prompt);
+            setStep(4); // Show final prompt
+        } catch (err) {
+            console.error('Error reconstructing prompt:', err);
+            setError(err.message || 'Failed to reconstruct prompt. Make sure the backend is running.');
+            setStep(2); // Go back to JSON view
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleNextStep = () => {
+        if (step === 0) {
+            handleCaptureContext();
+        } else if (step === 2) {
+            handleReconstructPrompt();
+        } else {
+            setStep(s => Math.min(s + 1, 4));
+        }
+    };
+
+    const reset = () => {
+        setStep(0);
+        setExtractedContext(null);
+        setContextId(null);
+        setReconstructedPromptText('');
+        setError(null);
+        setIsLoading(false);
+        setChatMessages(DEFAULT_CHAT);
+    };
 
     return (
         <section className="section" id="demo">
@@ -50,7 +108,7 @@ const Demo = () => {
                         </div>
 
                         <div style={{ background: '#000', borderRadius: '8px', padding: '1rem', height: '300px', overflowY: 'auto', border: step === 1 ? '2px solid var(--accent-primary)' : '1px solid #333', transition: 'all 0.3s' }}>
-                            {MOCK_CHAT.map((msg, i) => (
+                            {chatMessages.map((msg, i) => (
                                 <div key={i} style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                                     <div style={{
                                         background: msg.role === 'user' ? '#1c1c24' : '#2d2d3a',
@@ -67,7 +125,7 @@ const Demo = () => {
                             {step === 1 && (
                                 <motion.div
                                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-primary)', fontSize: '0.875rem' }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-primary)', fontSize: '0.875rem', marginTop: '1rem' }}
                                 >
                                     <Loader2 className="spin" size={14} /> Extracting Context...
                                 </motion.div>
@@ -86,9 +144,9 @@ const Demo = () => {
                                     </div>
                                 </div>
 
-                                {step === 2 && (
-                                    <div style={{ background: '#1e293b', borderRadius: '8px', padding: '1rem', height: '300px', fontFamily: 'monospace', fontSize: '0.8rem', color: '#93c5fd', overflow: 'hidden' }}>
-                                        <pre>{JSON.stringify(MOCK_CONTEXT, null, 2)}</pre>
+                                {step === 2 && extractedContext && (
+                                    <div style={{ background: '#1e293b', borderRadius: '8px', padding: '1rem', height: '300px', fontFamily: 'monospace', fontSize: '0.8rem', color: '#93c5fd', overflow: 'auto' }}>
+                                        <pre style={{ margin: 0 }}>{JSON.stringify(extractedContext, null, 2)}</pre>
                                     </div>
                                 )}
 
@@ -100,12 +158,12 @@ const Demo = () => {
                                                 <p style={{ marginTop: '1rem' }}>Restoring Context...</p>
                                             </div>
                                         ) : (
-                                            <div>
-                                                <div style={{ color: '#d1d5db', fontSize: '0.9rem', marginBottom: '1rem', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>
-                                                    Context Restored ✅
+                                            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                                <div style={{ color: '#d1d5db', fontSize: '0.9rem', marginBottom: '1rem', borderBottom: '1px solid #333', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                    <CheckCircle2 size={16} color="#10a37f" /> Context Restored
                                                 </div>
-                                                <div style={{ color: '#fff' }}>
-                                                    {MOCK_PROMPT.split('\n').map((l, i) => <div key={i}>{l}</div>)}
+                                                <div style={{ color: '#fff', fontSize: '0.9rem', lineHeight: '1.6', overflowY: 'auto', flex: 1, whiteSpace: 'pre-wrap' }}>
+                                                    {reconstructedPromptText || 'No prompt generated'}
                                                 </div>
                                             </div>
                                         )}
@@ -120,8 +178,34 @@ const Demo = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
-                    <button className="btn-primary" onClick={step === 4 ? reset : nextStep} style={{ minWidth: '150px' }}>
+                {error && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="glass-panel"
+                        style={{
+                            marginTop: '2rem',
+                            padding: '1rem',
+                            border: '1px solid #ef4444',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            color: '#ef4444'
+                        }}
+                    >
+                        <AlertCircle size={20} />
+                        <span>{error}</span>
+                    </motion.div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem', gap: '1rem' }}>
+                    <button 
+                        className="btn-primary" 
+                        onClick={step === 4 ? reset : handleNextStep} 
+                        disabled={isLoading}
+                        style={{ minWidth: '150px', opacity: isLoading ? 0.6 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
+                    >
                         {step === 0 && "Capture Context"}
                         {step === 1 && "Extracting..."}
                         {step === 2 && "Load in Claude"}
